@@ -1,3 +1,50 @@
+// Building a better Validation for our form
+interface ValidatorConfig {
+	value: string | number;
+	required?: boolean;
+	minLength?: number;
+	maxLength?: number;
+	min?: number;
+	max?: number;
+}
+
+// Here is the Validation Function
+function validate(validatableInput: ValidatorConfig) {
+	let isValid = true;
+	if (validatableInput.required) {
+		isValid = isValid && validatableInput.value.toString().trim().length !== 0;
+	}
+	if (
+		validatableInput.minLength != null &&
+		typeof validatableInput.value === 'string'
+	) {
+		isValid =
+			isValid && validatableInput.value.length > validatableInput.minLength;
+	}
+	if (
+		validatableInput.maxLength != null &&
+		typeof validatableInput.value === 'string'
+	) {
+		isValid =
+			isValid && validatableInput.value.length < validatableInput.maxLength;
+	}
+
+	if (
+		validatableInput.min != null &&
+		typeof validatableInput.value === 'number'
+	) {
+		isValid = isValid && validatableInput.value > validatableInput.min;
+	}
+	if (
+		validatableInput.max != null &&
+		typeof validatableInput.value === 'number'
+	) {
+		isValid = isValid && validatableInput.value < validatableInput.max;
+	}
+
+	return isValid;
+}
+
 // A decorator function for bindind this
 function autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
 	const originalMethod = descriptor.value;
@@ -24,21 +71,25 @@ class ProjectInput {
 		this.templateElement = document.getElementById(
 			'project-input'
 		)! as HTMLTemplateElement;
+
 		this.hostElement = document.getElementById('app')! as HTMLDivElement;
 
 		const importedNode = document.importNode(
 			this.templateElement.content,
 			true
 		);
+
 		this.element = importedNode.firstElementChild as HTMLFormElement;
 		this.element.id = 'user-input';
 
 		this.titleInputElement = this.element.querySelector(
 			'#title'
 		) as HTMLInputElement;
+
 		this.descriptionInputElement = this.element.querySelector(
 			'#description'
 		) as HTMLInputElement;
+
 		this.peopleInputElement = this.element.querySelector(
 			'#people'
 		) as HTMLInputElement;
@@ -83,7 +134,7 @@ class ProjectInput {
 	}
 
 	private configure() {
-		this.element.addEventListener('submit', this.submitHandler.bind(this));
+		this.element.addEventListener('submit', this.submitHandler);
 	}
 
 	private attach() {
