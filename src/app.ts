@@ -58,6 +58,29 @@ function autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
 	return adjDescriptor;
 }
 
+// ProjectList Class
+class ProjectList {
+	templateElement: HTMLTemplateElement;
+	hostElement: HTMLDivElement;
+	element: HTMLElement;
+
+	constructor(private type: 'active' | 'finished') {
+		this.templateElement = document.getElementById(
+			'project-list'
+		)! as HTMLTemplateElement;
+
+		this.hostElement = document.getElementById('app')! as HTMLDivElement;
+
+		const importedNode = document.importNode(
+			this.templateElement.content,
+			true
+		);
+
+		this.element = importedNode.firstElementChild as HTMLElement;
+
+		this.element.id = `${this.type}-projects`;
+	}
+}
 // Project Input class
 class ProjectInput {
 	templateElement: HTMLTemplateElement;
@@ -120,9 +143,9 @@ class ProjectInput {
 		};
 
 		if (
-		  !validate(titleValidatable) ||
-      !validate(descriptionValidatable) ||
-      !validate(peopleValidatable)
+			!validate(titleValidatable) ||
+			!validate(descriptionValidatable) ||
+			!validate(peopleValidatable)
 		) {
 			alert('Invalid input, please try again!');
 			return;
