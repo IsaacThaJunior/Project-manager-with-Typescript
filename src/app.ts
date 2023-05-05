@@ -1,3 +1,50 @@
+// Creting a Project management state class
+class ProjectState {
+	private listeners: any[] = [];
+	private projects: any[] = [];
+	private static instance: ProjectState;
+
+	private constructor() {}
+
+	static getInstance() {
+		if (this.instance) {
+			return this.instance;
+		}
+		this.instance = new ProjectState();
+		return this.instance;
+	}
+
+	addListener(listenerFn: Function) {
+		this.listeners.push(listenerFn);
+	}
+
+	addProject(title: string, description: string, numOfPeople: number) {
+		const newProject = {
+			id: Math.random().toString(),
+			title,
+			description,
+			people: numOfPeople,
+		};
+		this.projects.push(newProject);
+		for (const listenerFn of this.listeners) {
+			listenerFn(this.projects.slice());
+		}
+	}
+
+	moveProject(projectId: string, newStatus: 'active' | 'finished') {
+		const project = this.projects.find((prj) => prj.id === projectId);
+		if (project && project.status !== newStatus) {
+			project.status = newStatus;
+			for (const listenerFn of this.listeners) {
+				listenerFn(this.projects.slice());
+			}
+		}
+	}
+}
+
+// Creating a global state object
+const projectState = ProjectState.getInstance();
+
 // Building a better Validation for our form
 interface ValidatorConfig {
 	value: string | number;
@@ -79,6 +126,20 @@ class ProjectList {
 		this.element = importedNode.firstElementChild as HTMLElement;
 
 		this.element.id = `${this.type}-projects`;
+		this.attach();
+		this.renderContent();
+	}
+
+	private renderContent() {
+		const listId = `${this.type}-projects-list`;
+		this.element.querySelector('ul')!.id = listId;
+		this.element.querySelector(
+			'h2'
+		)!.textContent = `${this.type.toUpperCase()} PROJECTS`;
+	}
+
+	private attach() {
+		this.hostElement.insertAdjacentElement('beforeend', this.element);
 	}
 }
 // Project Input class
@@ -167,7 +228,7 @@ class ProjectInput {
 
 		if (Array.isArray(userInput)) {
 			const [title, desc, people] = userInput;
-			console.log(title, desc, people);
+			projectState.addProject(title, desc, people);
 			this.clearInputs();
 		}
 	}
@@ -182,3 +243,5 @@ class ProjectInput {
 }
 
 const projectInput = new ProjectInput();
+const activeProjectList = new ProjectList('active');
+const finishedProjectList = new ProjectList('finished');
