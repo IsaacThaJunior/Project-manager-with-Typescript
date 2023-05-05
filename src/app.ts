@@ -110,6 +110,7 @@ class ProjectList {
 	templateElement: HTMLTemplateElement;
 	hostElement: HTMLDivElement;
 	element: HTMLElement;
+	assignedProjects: any[];
 
 	constructor(private type: 'active' | 'finished') {
 		this.templateElement = document.getElementById(
@@ -117,7 +118,7 @@ class ProjectList {
 		)! as HTMLTemplateElement;
 
 		this.hostElement = document.getElementById('app')! as HTMLDivElement;
-
+		this.assignedProjects = [];
 		const importedNode = document.importNode(
 			this.templateElement.content,
 			true
@@ -126,8 +127,31 @@ class ProjectList {
 		this.element = importedNode.firstElementChild as HTMLElement;
 
 		this.element.id = `${this.type}-projects`;
+
+		projectState.addListener((projects: any[]) => {
+			this.assignedProjects = projects;
+			this.renderProjects();
+			// const relevantProjects = projects.filter((prj) => {
+			//   if (this.type === 'active') {
+			//     return prj.status === ProjectStatus.Active;
+			//   }
+			//   return prj.status === ProjectStatus.Finished;
+			// });
+		});
+
 		this.attach();
 		this.renderContent();
+	}
+
+	private renderProjects() {
+		const listEl = document.getElementById(
+			`${this.type}-projects-list`
+		)! as HTMLUListElement;
+		for (const prjItem of this.assignedProjects) {
+			const listItem = document.createElement('li');
+			listItem.textContent = prjItem.title;
+			listEl.appendChild(listItem);
+		}
 	}
 
 	private renderContent() {
