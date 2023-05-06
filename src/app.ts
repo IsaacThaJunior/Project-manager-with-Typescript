@@ -1,3 +1,15 @@
+// Drag & Drop Interfaces
+interface Draggable {
+	dragStartHandler(event: DragEvent): void;
+	dragEndHandler(event: DragEvent): void;
+}
+
+interface DragTarget {
+	dragOverHandler(event: DragEvent): void;
+	dropHandler(event: DragEvent): void;
+	dragLeaveHandler(event: DragEvent): void;
+}
+
 // Project type
 enum ProjectStatus {
 	Active,
@@ -30,8 +42,8 @@ class ProjectState extends State<Project> {
 	private static instance: ProjectState;
 
 	private constructor() {
-    super()
-  }
+		super();
+	}
 
 	static getInstance() {
 		if (this.instance) {
@@ -55,15 +67,15 @@ class ProjectState extends State<Project> {
 		}
 	}
 
-	moveProject(projectId: string, newStatus: 'active' | 'finished') {
-		const project = this.projects.find((prj) => prj.id === projectId);
-		if (project && project.status !== newStatus) {
-			project.status = newStatus;
-			for (const listenerFn of this.listeners) {
-				listenerFn(this.projects.slice());
-			}
-		}
-	}
+	// moveProject(projectId: string, newStatus: 'active' | 'finished') {
+	// 	const project = this.projects.find((prj) => prj.id === projectId);
+	// 	if (project && project.status !== newStatus) {
+	// 		project.status = newStatus;
+	// 		for (const listenerFn of this.listeners) {
+	// 			listenerFn(this.projects.slice());
+	// 		}
+	// 	}
+	// }
 }
 
 // Creating a global state object
@@ -116,6 +128,19 @@ function validate(validatableInput: ValidatorConfig) {
 	return isValid;
 }
 
+// A decorator function for bindind this
+function autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
+	const originalMethod = descriptor.value;
+	const adjDescriptor: PropertyDescriptor = {
+		configurable: true,
+		get() {
+			const boundFn = originalMethod.bind(this);
+			return boundFn;
+		},
+	};
+	return adjDescriptor;
+}
+
 abstract class Component<T extends HTMLElement, U extends HTMLElement> {
 	templateElement: HTMLTemplateElement;
 	hostElement: T;
@@ -155,17 +180,32 @@ abstract class Component<T extends HTMLElement, U extends HTMLElement> {
 	abstract renderContent(): void;
 }
 
-// A decorator function for bindind this
-function autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
-	const originalMethod = descriptor.value;
-	const adjDescriptor: PropertyDescriptor = {
-		configurable: true,
-		get() {
-			const boundFn = originalMethod.bind(this);
-			return boundFn;
-		},
-	};
-	return adjDescriptor;
+// ProjectItem class
+class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
+	private project: Project;
+
+	get persons() {
+		if (this.project.people === 1) {
+			return '1 person';
+		} else {
+			return `${this.project.people} persons`;
+		}
+	}
+
+	constructor(hostId: string, project: Project) {
+		super('single-project', hostId, false, project.id);
+		this.project = project;
+		this.configure();
+		this.renderContent();
+	}
+
+	configure() {}
+
+	renderContent() {
+		this.element.querySelector('h2')!.textContent = this.project.title;
+		this.element.querySelector('h3')!.textContent = this.persons + ' assigned';
+		this.element.querySelector('p')!.textContent = this.project.description;
+	}
 }
 
 // ProjectList Class
@@ -200,9 +240,8 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> {
 		)! as HTMLUListElement;
 		listEl.innerHTML = '';
 		for (const prjItem of this.assignedProjects) {
-			const listItem = document.createElement('li');
-			listItem.textContent = prjItem.title;
-			listEl.appendChild(listItem);
+			const listItem = this.element.querySelector('ul')!.id;
+			new ProjectItem(listItem, prjItem);
 		}
 	}
 
@@ -290,7 +329,9 @@ class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
 
 		if (Array.isArray(userInput)) {
 			const [title, desc, people] = userInput;
+
 			projectState.addProject(title, desc, people);
+
 			this.clearInputs();
 		}
 	}
